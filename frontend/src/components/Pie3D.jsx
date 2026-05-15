@@ -138,16 +138,16 @@ export default function Pie3D({ data, colors, onClickSlice }) {
       )}
 
       {/* Legend */}
-      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1" style={{ marginTop: -20 }}>
-        {data.map((d, i) => (
+      <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 px-2 overflow-hidden" style={{ marginTop: -10 }}>
+        {data.slice(0, 10).map((d, i) => (
           <button
             key={d.slug ?? d.name}
             onClick={() => d.slug !== 'others' && onClickSlice?.(i)}
-            className={`flex items-center gap-1.5 text-xs transition-colors font-mono ${d.slug !== 'others' ? 'text-term-gray hover:text-term-fg cursor-pointer' : 'text-term-muted cursor-default'}`}
+            className={`flex items-center gap-1 text-[10px] transition-colors font-mono whitespace-nowrap ${d.slug !== 'others' ? 'text-term-gray hover:text-term-fg cursor-pointer' : 'text-term-muted cursor-default'}`}
           >
-            <span className="w-2.5 h-2.5 flex-shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
-            {d.name}
-            <span className="text-term-muted">{((d.value / total) * 100).toFixed(1)}%</span>
+            <span className="w-2 h-2 flex-shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
+            {d.name.length > 10 ? d.name.slice(0, 9) + '.' : d.name}
+            <span className="text-term-muted">{((d.value / total) * 100).toFixed(0)}%</span>
           </button>
         ))}
       </div>

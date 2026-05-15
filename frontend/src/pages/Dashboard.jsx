@@ -28,6 +28,40 @@ const fadeUp = {
   animate: { opacity: 1 },
 };
 
+const POOL_LOGO_BASE = 'https://raw.githubusercontent.com/mempool/mining-pool-logos/master/';
+
+function InfiniteCarousel({ items, direction = 'left', speed = 30, renderCard }) {
+  if (!items.length) return null;
+  const doubled = [...items, ...items];
+  const dir = direction === 'left' ? 'normal' : 'reverse';
+
+  return (
+    <div className="overflow-hidden relative group">
+      <div className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none"
+        style={{ background: 'linear-gradient(to right, #0a0a0a, transparent)' }} />
+      <div className="absolute right-0 top-0 bottom-0 w-8 z-10 pointer-events-none"
+        style={{ background: 'linear-gradient(to left, #0a0a0a, transparent)' }} />
+      <div
+        className="flex gap-3 w-max carousel-track"
+        style={{
+          animation: `carousel-scroll ${speed}s linear infinite`,
+          animationDirection: dir,
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.animationPlayState = 'paused'}
+        onMouseLeave={(e) => e.currentTarget.style.animationPlayState = 'running'}
+      >
+        {doubled.map((item, i) => renderCard(item, i))}
+      </div>
+      <style>{`
+        @keyframes carousel-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [overview, setOverview] = useState([]);
@@ -92,8 +126,10 @@ export default function Dashboard() {
   const highestCorr = stats.topPositive?.[0];
   const lowestCorr = stats.topNegative?.[0];
 
+  const allPoolsForCarousel = pools.length > 0 ? pools : [];
+
   return (
-    <motion.div initial="initial" animate="animate" className="space-y-8">
+    <motion.div initial="initial" animate="animate" className="space-y-6">
       {/* Header */}
       <motion.div {...fadeUp} className="flex items-center justify-between">
         <h2 className="text-3xl font-bold term-glow">DASHBOARD</h2>
@@ -124,7 +160,42 @@ export default function Dashboard() {
         ))}
       </motion.div>
 
-      {/* Overview: Radar + Avg Hashrate vs Avg Crypto Price */}
+      {/* Mining Pools Carousel */}
+      {allPoolsForCarousel.length > 0 && (
+        <motion.div {...fadeUp}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold term-glow">MINING POOLS</h3>
+            <Link to="/pools" className="text-term-fg hover:text-term-fg text-sm transition-colors">
+              VIEW_ALL &rarr;
+            </Link>
+          </div>
+          <InfiniteCarousel
+            items={allPoolsForCarousel}
+            direction="left"
+            speed={35}
+            renderCard={(pool) => (
+              <Link key={pool.slug} to={`/pool/${pool.slug}`}
+                className="terminal-window flex flex-col items-center justify-center gap-2 text-center flex-shrink-0 group"
+                style={{ width: 140, height: 120 }}>
+                <div className="w-11 h-11 bg-term-dim border border-term-muted p-1.5 flex items-center justify-center">
+                  <img src={pool.logo} alt={pool.name} className="w-full h-full object-contain"
+                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                  <div style={{ display: 'none' }}
+                    className="w-full h-full items-center justify-center text-lg font-bold text-term-fg">
+                    {pool.name.charAt(0)}
+                  </div>
+                </div>
+                <p className="text-xs font-semibold group-hover:text-term-fg transition-colors leading-tight max-w-[120px] truncate">{pool.name}</p>
+                <p className="text-term-gray text-[10px] font-mono">
+                  {pool.avg_hashrate ? fmtHashrate(pool.avg_hashrate) : '-'}
+                </p>
+              </Link>
+            )}
+          />
+        </motion.div>
+      )}
+
+      {/* Market Intelligence + Hashrate Distribution */}
       {(overview.length > 0 || (stats.avgByCoin?.length > 0)) && (
         <motion.div {...fadeUp} className="terminal-window p-4 sm:p-6">
           <div className="flex items-center gap-2 mb-5">
@@ -134,82 +205,101 @@ export default function Dashboard() {
             </h3>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6">
-            {/* Left: Radar avg correlation profile */}
-            {stats.avgByCoin?.length > 0 && (
-              <div className="lg:col-span-2 flex flex-col items-center">
-                <p className="text-xs text-term-gray uppercase tracking-wider mb-3">AVG CORRELATION PROFILE</p>
-                <ResponsiveContainer width="100%" height={300}>
-                  <RadarChart
-                    data={stats.avgByCoin.map((d) => ({
-                      crypto: coinNames[d.coin_id] ?? d.coin_id,
-                      correlation: d.avg_corr ?? 0,
-                    }))}
-                    margin={{ top: 10, right: 20, bottom: 10, left: 20 }}
-                  >
-                    <PolarGrid stroke="#1f521f" />
-                    <PolarAngleAxis
-                      dataKey="crypto"
-                      tick={({ x, y, payload }) => {
-                        const d = stats.avgByCoin.find((c) => (coinNames[c.coin_id] ?? c.coin_id) === payload.value);
-                        const color = d?.avg_corr >= 0 ? '#33ff00' : '#ff3333';
-                        return (
-                          <g>
-                            <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fill={color} fontSize={11} fontWeight={600}>
-                              {payload.value}
-                            </text>
-                          </g>
-                        );
-                      }}
+            {/* Left: Radar + Chart */}
+            <div className={pieData.length > 0 ? 'lg:col-span-3' : 'lg:col-span-5'}>
+              <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                {/* Radar avg correlation profile */}
+                {stats.avgByCoin?.length > 0 && (
+                  <div className="flex flex-col items-center">
+                    <p className="text-xs text-term-gray uppercase tracking-wider mb-3">AVG CORRELATION PROFILE</p>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <RadarChart
+                        data={stats.avgByCoin.map((d) => ({
+                          crypto: coinNames[d.coin_id] ?? d.coin_id,
+                          correlation: d.avg_corr ?? 0,
+                        }))}
+                        margin={{ top: 10, right: 20, bottom: 10, left: 20 }}
+                      >
+                        <PolarGrid stroke="#1f521f" />
+                        <PolarAngleAxis
+                          dataKey="crypto"
+                          tick={({ x, y, payload }) => {
+                            const d = stats.avgByCoin.find((c) => (coinNames[c.coin_id] ?? c.coin_id) === payload.value);
+                            const color = d?.avg_corr >= 0 ? '#33ff00' : '#ff3333';
+                            return (
+                              <g>
+                                <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fill={color} fontSize={11} fontWeight={600}>
+                                  {payload.value}
+                                </text>
+                              </g>
+                            );
+                          }}
+                        />
+                        <PolarRadiusAxis
+                          angle={90}
+                          domain={[-1, 1]}
+                          tick={{ fill: '#1f521f', fontSize: 8 }}
+                          tickCount={5}
+                        />
+                        <Tooltip
+                          cursor={false}
+                          contentStyle={{
+                            backgroundColor: '#0a0a0a',
+                            border: '1px solid #1f521f',
+                            borderRadius: 0,
+                            fontSize: 12,
+                            color: '#e5e7eb',
+                          }}
+                          formatter={(v) => v.toFixed(4)}
+                        />
+                        <Radar
+                          name="Avg Correlation"
+                          dataKey="correlation"
+                          stroke="#33ff00"
+                          fill="#33ff00"
+                          fillOpacity={0.15}
+                          strokeWidth={2}
+                          dot={{ r: 4, fill: '#33ff00', stroke: '#0e1726', strokeWidth: 2 }}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+                {/* Hashrate vs BTC Price */}
+                {overview.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <p className="text-xs text-term-gray uppercase tracking-wider">
+                        AVG HASHRATE VS BTC PRICE
+                      </p>
+                      <img src="https://assets.coingecko.com/coins/images/1/small/bitcoin.png" alt="BTC" className="w-3.5 h-3.5" />
+                    </div>
+                    <ZoomableAreaChart
+                      data={overview}
+                      height={300}
+                      leftAxis={{ color: '#33ff00', formatter: fmtHashrate }}
+                      rightAxis={{ color: '#ffb000', formatter: (v) => `$${v.toLocaleString()}` }}
+                      series={[
+                        { dataKey: 'hashrate', color: '#33ff00', name: 'Avg Hashrate', yAxisId: 'left' },
+                        { dataKey: 'price', color: '#ffb000', name: 'BTC Price', yAxisId: 'right' },
+                      ]}
+                      source="Hashrate: blockchain.info | BTC Price: CoinGecko"
                     />
-                    <PolarRadiusAxis
-                      angle={90}
-                      domain={[-1, 1]}
-                      tick={{ fill: '#1f521f', fontSize: 8 }}
-                      tickCount={5}
-                    />
-                    <Tooltip
-                      cursor={false}
-                      contentStyle={{
-                        backgroundColor: '#0a0a0a',
-                        border: '1px solid #1f521f',
-                        borderRadius: 0,
-                        fontSize: 12,
-                        color: '#e5e7eb',
-                      }}
-                      formatter={(v) => v.toFixed(4)}
-                    />
-                    <Radar
-                      name="Avg Correlation"
-                      dataKey="correlation"
-                      stroke="#33ff00"
-                      fill="#33ff00"
-                      fillOpacity={0.15}
-                      strokeWidth={2}
-                      dot={{ r: 4, fill: '#33ff00', stroke: '#0e1726', strokeWidth: 2 }}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
+                  </div>
+                )}
               </div>
-            )}
-            {/* Right: Hashrate vs BTC Price */}
-            {overview.length > 0 && (
-              <div className={stats.avgByCoin?.length > 0 ? 'lg:col-span-3' : 'lg:col-span-5'}>
-                <div className="flex items-center gap-2 mb-3">
-                  <p className="text-xs text-term-gray uppercase tracking-wider">
-                    AVG HASHRATE VS BTC PRICE
-                  </p>
-                  <img src="https://assets.coingecko.com/coins/images/1/small/bitcoin.png" alt="BTC" className="w-3.5 h-3.5" />
-                </div>
-                <ZoomableAreaChart
-                  data={overview}
-                  height={300}
-                  leftAxis={{ color: '#33ff00', formatter: fmtHashrate }}
-                  rightAxis={{ color: '#ffb000', formatter: (v) => `$${v.toLocaleString()}` }}
-                  series={[
-                    { dataKey: 'hashrate', color: '#33ff00', name: 'Avg Hashrate', yAxisId: 'left' },
-                    { dataKey: 'price', color: '#ffb000', name: 'BTC Price', yAxisId: 'right' },
-                  ]}
-                  source="Hashrate: blockchain.info | BTC Price: CoinGecko"
+            </div>
+            {/* Right: Pie chart */}
+            {pieData.length > 0 && (
+              <div className="lg:col-span-2">
+                <p className="text-xs text-term-gray uppercase tracking-wider mb-3">HASHRATE DISTRIBUTION</p>
+                <Pie3D
+                  data={pieData}
+                  colors={TERMINAL_COLORS}
+                  onClickSlice={(i) => {
+                    const slug = pieData[i].slug;
+                    if (slug !== 'others') navigate(`/pool/${slug}`);
+                  }}
                 />
               </div>
             )}
@@ -217,56 +307,7 @@ export default function Dashboard() {
         </motion.div>
       )}
 
-      {/* Pool Cards + Hashrate Distribution */}
-      <motion.div {...fadeUp}>
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-3">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold term-glow">MINING POOLS</h3>
-              <Link to="/pools" className="text-term-fg hover:text-term-fg text-sm transition-colors">
-                VIEW_ALL &rarr;
-              </Link>
-            </div>
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {pools.slice(0, 8).map((pool, i) => (
-                <motion.div key={pool.slug} initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}>
-                  <Link to={`/pool/${pool.slug}`}
-                    className="terminal-window p-4 flex flex-col items-center gap-2 text-center min-w-[110px] group">
-                    <div className="w-11 h-11 bg-term-dim border border-term-muted p-1.5 flex items-center justify-center group-hover:bg-term-dim transition-colors">
-                      <img src={pool.logo} alt={pool.name} className="w-full h-full object-contain"
-                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-                      <div style={{ display: 'none' }}
-                        className="w-full h-full items-center justify-center text-lg font-bold text-term-fg">
-                        {pool.name.charAt(0)}
-                      </div>
-                    </div>
-                    <p className="text-xs font-semibold group-hover:text-term-fg transition-colors leading-tight">{pool.name}</p>
-                    <p className="text-term-gray text-[10px] font-mono">
-                      {pool.avg_hashrate ? fmtHashrate(pool.avg_hashrate) : '-'}
-                    </p>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-          <div className="lg:col-span-2">
-            <div className="terminal-window p-4 sm:p-6">
-              <h3 className="text-sm sm:text-lg font-semibold mb-4 term-glow">HASHRATE DISTRIBUTION</h3>
-              <Pie3D
-                data={pieData}
-                colors={TERMINAL_COLORS}
-                onClickSlice={(i) => {
-                  const slug = pieData[i].slug;
-                  if (slug !== 'others') navigate(`/pool/${slug}`);
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Coin Cards */}
+      {/* Cryptocurrencies Carousel (opposite direction) */}
       {coins.length > 0 && (
         <motion.div {...fadeUp}>
           <div className="flex items-center justify-between mb-3">
@@ -275,30 +316,31 @@ export default function Dashboard() {
               VIEW_ALL &rarr;
             </Link>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {coins.map((coin, i) => (
-              <motion.div key={coin.id} initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}>
-                <Link to={`/coin/${coin.id}`}
-                  className="terminal-window p-4 flex flex-col items-center gap-2 text-center min-w-[110px] group">
-                  <div className="w-10 h-10 bg-term-dim border border-term-muted p-1 flex items-center justify-center group-hover:bg-term-dim transition-colors">
-                    {coin.logo ? (
-                      <img src={coin.logo} alt={coin.name} className="w-full h-full object-contain" />
-                    ) : (
-                      <span className="text-lg font-bold text-term-fg">{coin.symbol?.[0] ?? '?'}</span>
-                    )}
-                  </div>
-                  <p className="text-xs font-semibold group-hover:text-term-fg transition-colors">
-                    {coin.name}
-                    <span className="text-term-gray ml-1 text-[10px]">{coin.symbol}</span>
-                  </p>
-                  <p className="text-term-gray text-[10px] font-mono">
-                    {coin.price_usd != null ? `$${coin.price_usd.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '-'}
-                  </p>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+          <InfiniteCarousel
+            items={coins}
+            direction="right"
+            speed={40}
+            renderCard={(coin) => (
+              <Link key={coin.id} to={`/coin/${coin.id}`}
+                className="terminal-window flex flex-col items-center justify-center gap-2 text-center flex-shrink-0 group"
+                style={{ width: 140, height: 120 }}>
+                <div className="w-10 h-10 bg-term-dim border border-term-muted p-1 flex items-center justify-center">
+                  {coin.logo ? (
+                    <img src={coin.logo} alt={coin.name} className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-lg font-bold text-term-fg">{coin.symbol?.[0] ?? '?'}</span>
+                  )}
+                </div>
+                <p className="text-xs font-semibold group-hover:text-term-fg transition-colors max-w-[120px] truncate">
+                  {coin.name}
+                  <span className="text-term-gray ml-1 text-[10px]">{coin.symbol}</span>
+                </p>
+                <p className="text-term-gray text-[10px] font-mono">
+                  {coin.price_usd != null ? `$${coin.price_usd.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '-'}
+                </p>
+              </Link>
+            )}
+          />
         </motion.div>
       )}
 

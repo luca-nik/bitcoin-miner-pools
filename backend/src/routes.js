@@ -333,7 +333,7 @@ export function registerRoutes(app) {
     const btcPrice = db.prepare(`
       SELECT
         (timestamp / 86400) * 86400 as timestamp,
-        price_usd as price
+        AVG(price_usd) as price
       FROM crypto_prices
       WHERE coin_id = 'bitcoin'
       GROUP BY (timestamp / 86400)
@@ -386,7 +386,7 @@ export function registerRoutes(app) {
     const btcPrice = db.prepare(`
       SELECT
         (timestamp / 86400) * 86400 as timestamp,
-        price_usd as price
+        AVG(price_usd) as price
       FROM crypto_prices
       WHERE coin_id = 'bitcoin'
       GROUP BY (timestamp / 86400)
@@ -426,7 +426,7 @@ export function registerRoutes(app) {
     const coinPrices = db.prepare(`
       SELECT
         (timestamp / 86400) * 86400 as timestamp,
-        price_usd as price
+        AVG(price_usd) as price
       FROM crypto_prices
       WHERE coin_id = ?
       GROUP BY (timestamp / 86400)
