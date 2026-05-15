@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Routes, Route, NavLink } from 'react-router-dom'
+import { Routes, Route, NavLink, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import Dashboard from './pages/Dashboard.jsx'
 import Correlations from './pages/Correlations.jsx'
