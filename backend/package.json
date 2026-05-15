@@ -1,0 +1,15 @@
+{
+  "name": "backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "fastify": "^5.2.0",
+    "@fastify/cors": "^10.0.0",
+    "node-cron": "^3.0.3"
+  }
+}

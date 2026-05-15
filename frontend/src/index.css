@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === GLOBAL RESET === */
+* {
+  font-family: 'JetBrains Mono', monospace;
+  border-radius: 0 !important;
+}
+
+body {
+  background: #0a0a0a;
+  color: #33ff00;
+  min-height: 100vh;
+}
+
+/* === TERMINAL WINDOW CARD === */
+.terminal-window {
+  background: #0a0a0a;
+  border: 1px solid #1f521f;
+  position: relative;
+  transition: border-color 0.15s ease;
+}
+.terminal-window:hover {
+  border-color: #33ff00;
+}
+
+/* === ASCII TITLE BAR === */
+.terminal-titlebar {
+  border-bottom: 1px solid #1f521f;
+  padding: 8px 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #33ff00;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.terminal-titlebar::before {
+  content: '+--- ';
+}
+.terminal-titlebar::after {
+  content: ' ---+';
+}
+
+/* === TEXT GLOW === */
+.term-glow {
+  color: #33ff00;
+  text-shadow: 0 0 5px rgba(51, 255, 0, 0.5);
+}
+.term-glow-amber {
+  color: #ffb000;
+  text-shadow: 0 0 5px rgba(255, 176, 0, 0.5);
+}
+
+/* === BLINK ANIMATION === */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.term-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* === TYPEWRITER CURSOR === */
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.term-cursor::after {
+  content: '\2588';
+  animation: cursor-blink 0.8s step-end infinite;
+  color: #33ff00;
+}
+
+/* === CRT SCANLINES OVERLAY === */
+.crt-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.08) 0px,
+    rgba(0, 0, 0, 0.08) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.4;
+}
+
+/* === BRACKET BUTTONS === */
+.btn-bracket {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #33ff00;
+  border: 1px solid #1f521f;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-bracket::before { content: '[ '; }
+.btn-bracket::after  { content: ' ]'; }
+.btn-bracket:hover {
+  background: #33ff00;
+  color: #0a0a0a;
+}
+.btn-bracket.active {
+  background: #33ff00;
+  color: #0a0a0a;
+}
+.btn-bracket:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.btn-bracket:disabled:hover {
+  background: transparent;
+  color: #33ff00;
+}
+
+/* === STATUS INDICATORS === */
+.status-ok   { color: #33ff00; }
+.status-err  { color: #ff3333; }
+.status-warn { color: #ffb000; }
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb { background: #1f521f; }
+::-webkit-scrollbar-thumb:hover { background: #33ff00; }
+
+/* === RECHARTS OVERRIDES === */
+.recharts-tooltip-wrapper { pointer-events: none !important; }
+.recharts-default-tooltip { background: transparent !important; border: none !important; }
+.recharts-brush-traveller { fill: #33ff00 !important; }
+.recharts-line-curve { filter: none; }
+
+/* === MISC === */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }

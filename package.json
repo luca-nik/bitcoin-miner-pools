@@ -1,0 +1,5 @@
+{
+  "name": "bitcoin-miner-pools",
+  "private": true,
+  "workspaces": ["backend", "frontend"]
+}
