@@ -329,19 +329,20 @@ export function registerRoutes(app) {
       ORDER BY timestamp
     `).all();
 
-    // Average price across all coins per day
-    const avgPrice = db.prepare(`
+    // BTC price per day
+    const btcPrice = db.prepare(`
       SELECT
         (timestamp / 86400) * 86400 as timestamp,
-        AVG(price_usd) as price
+        price_usd as price
       FROM crypto_prices
+      WHERE coin_id = 'bitcoin'
       GROUP BY (timestamp / 86400)
       ORDER BY timestamp
     `).all();
 
     // Align on common timestamps
     const priceMap = new Map();
-    for (const p of avgPrice) priceMap.set(p.timestamp, p.price);
+    for (const p of btcPrice) priceMap.set(p.timestamp, p.price);
 
     const points = [];
     for (const h of avgHashrate) {
@@ -381,18 +382,19 @@ export function registerRoutes(app) {
       ORDER BY timestamp
     `).all(slug);
 
-    // Average price across all coins per day
-    const avgPrice = db.prepare(`
+    // BTC price per day
+    const btcPrice = db.prepare(`
       SELECT
         (timestamp / 86400) * 86400 as timestamp,
-        AVG(price_usd) as price
+        price_usd as price
       FROM crypto_prices
+      WHERE coin_id = 'bitcoin'
       GROUP BY (timestamp / 86400)
       ORDER BY timestamp
     `).all();
 
     const priceMap = new Map();
-    for (const p of avgPrice) priceMap.set(p.timestamp, p.price);
+    for (const p of btcPrice) priceMap.set(p.timestamp, p.price);
 
     const points = [];
     for (const h of poolHr) {

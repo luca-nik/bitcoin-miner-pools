@@ -291,13 +291,14 @@ export default function PoolDetail() {
                 </ResponsiveContainer>
               </div>
             )}
-            {/* Right: Hashrate vs Avg Crypto Price */}
+            {/* Right: Hashrate vs BTC Price */}
             {vsAvg.length > 0 && (
               <div className={correlations.length > 0 ? 'lg:col-span-3' : 'lg:col-span-5'}>
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 mb-3">
                   <p className="text-xs text-term-gray uppercase tracking-wider">
-                    HASHRATE VS AVG CRYPTO PRICE
+                    HASHRATE VS BTC PRICE
                   </p>
+                  <img src="https://assets.coingecko.com/coins/images/1/small/bitcoin.png" alt="BTC" className="w-3.5 h-3.5" />
                 </div>
                 <ZoomableAreaChart
                   data={normalized ? normalizePoints(vsAvg) : vsAvg}
@@ -306,11 +307,11 @@ export default function PoolDetail() {
                   rightAxis={{ color: '#ffb000', formatter: normalized ? (v) => `${v.toFixed(0)}%` : (v) => `$${v.toLocaleString()}` }}
                   series={[
                     { dataKey: 'hashrate', color: '#ffffff', name: `${pool.name} Hashrate`, yAxisId: 'left' },
-                    { dataKey: 'price', color: '#ffb000', name: 'Avg Crypto Price', yAxisId: 'right' },
+                    { dataKey: 'price', color: '#ffb000', name: 'BTC Price', yAxisId: 'right' },
                   ]}
                   externalRange={getExternalRange(vsAvg)}
                   onRangeChange={handleSyncedRangeChange}
-                  source={`Hashrate: blockchain.info | Prices: CoinGecko`}
+                  source={`Hashrate: blockchain.info | BTC Price: CoinGecko`}
                 />
               </div>
             )}

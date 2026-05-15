@@ -191,12 +191,15 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </div>
             )}
-            {/* Right: Hashrate vs Avg Crypto Price */}
+            {/* Right: Hashrate vs BTC Price */}
             {overview.length > 0 && (
               <div className={stats.avgByCoin?.length > 0 ? 'lg:col-span-3' : 'lg:col-span-5'}>
-                <p className="text-xs text-term-gray uppercase tracking-wider mb-3">
-                  AVG HASHRATE VS AVG CRYPTO PRICE
-                </p>
+                <div className="flex items-center gap-2 mb-3">
+                  <p className="text-xs text-term-gray uppercase tracking-wider">
+                    AVG HASHRATE VS BTC PRICE
+                  </p>
+                  <img src="https://assets.coingecko.com/coins/images/1/small/bitcoin.png" alt="BTC" className="w-3.5 h-3.5" />
+                </div>
                 <ZoomableAreaChart
                   data={overview}
                   height={300}
@@ -204,9 +207,9 @@ export default function Dashboard() {
                   rightAxis={{ color: '#ffb000', formatter: (v) => `$${v.toLocaleString()}` }}
                   series={[
                     { dataKey: 'hashrate', color: '#33ff00', name: 'Avg Hashrate', yAxisId: 'left' },
-                    { dataKey: 'price', color: '#ffb000', name: 'Avg Crypto Price', yAxisId: 'right' },
+                    { dataKey: 'price', color: '#ffb000', name: 'BTC Price', yAxisId: 'right' },
                   ]}
-                  source="Hashrate: blockchain.info | Prices: CoinGecko"
+                  source="Hashrate: blockchain.info | BTC Price: CoinGecko"
                 />
               </div>
             )}
