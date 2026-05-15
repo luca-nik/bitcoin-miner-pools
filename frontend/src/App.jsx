@@ -31,13 +31,15 @@ export default function App() {
       <div className="crt-overlay" />
 
       <nav className="sticky top-0 z-50 bg-term-bg border-b border-term-muted px-4 sm:px-6 py-3 flex items-center justify-between">
-        <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-sm font-bold tracking-widest term-glow"
-        >
-          {'>'} MINE//SCOPE
-        </motion.h1>
+        <Link to="/">
+          <motion.h1
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-sm font-bold tracking-widest term-glow cursor-pointer"
+          >
+            {'>'} MINE//SCOPE
+          </motion.h1>
+        </Link>
 
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-4">

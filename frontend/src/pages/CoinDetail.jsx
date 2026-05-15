@@ -299,38 +299,6 @@ export default function CoinDetail() {
         </motion.div>
       )}
 
-      {/* Per-pool correlation list */}
-      <motion.div {...fadeUp} transition={{ delay: 0.2 }}>
-        <h3 className="text-sm sm:text-lg font-semibold mb-3">Pool Correlations</h3>
-        <div className="space-y-2">
-          {correlations.map((c, i) => (
-            <motion.div key={c.pool_slug}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: i * 0.04 }}>
-              <Link to={`/pair/${c.pool_slug}/${coinId}`}
-                className="flex justify-between items-center py-3 px-4 border border-term-muted hover:border-term-fg transition-all group">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-term-dim border border-term-muted p-1 flex items-center justify-center">
-                    <img src={`${POOL_LOGO_BASE}${c.pool_slug}.svg`} alt={c.pool_name}
-                      className="w-full h-full object-contain"
-                      onError={(e) => { e.target.style.display = 'none'; }} />
-                  </div>
-                  <span className="text-term-muted group-hover:text-white transition-colors font-medium">
-                    {c.pool_name}
-                  </span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-term-gray text-xs font-mono">{c.sample_count} pts</span>
-                  <span className={`font-mono text-sm ${corrColor(c.correlation)}`}>
-                    r = {c.correlation?.toFixed(4) ?? 'N/A'}
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
     </motion.div>
   );
 }

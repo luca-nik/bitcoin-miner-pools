@@ -536,6 +536,10 @@ export function registerRoutes(app) {
       }
     }
 
+    // Sort poolSeries by absolute correlation descending
+    const corrLookup = new Map(correlations.map((c) => [c.pool_slug, Math.abs(c.correlation)]));
+    poolSeries.sort((a, b) => (corrLookup.get(b.slug) ?? 0) - (corrLookup.get(a.slug) ?? 0));
+
     return {
       coinId,
       coinName: COIN_NAMES[coinId] ?? coinId,
