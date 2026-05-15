@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
   ResponsiveContainer, Tooltip,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
 } from 'recharts';
@@ -89,11 +88,6 @@ export default function Dashboard() {
     .filter((d) => d.avg_hashrate > 0)
     .slice(0, 10)
     .map((d) => ({ name: d.pool_name, slug: d.pool_slug, value: d.avg_hashrate }));
-
-  const barData = stats.avgByCoin.map((d) => ({
-    coin: coinNames[d.coin_id] ?? d.coin_id,
-    avg: d.avg_corr,
-  }));
 
   const highestCorr = stats.topPositive?.[0];
   const lowestCorr = stats.topNegative?.[0];
@@ -220,39 +214,54 @@ export default function Dashboard() {
         </motion.div>
       )}
 
-      {/* Pool Cards */}
-      {pools.length > 0 && (
-        <motion.div {...fadeUp}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold term-glow">MINING POOLS</h3>
-            <Link to="/pools" className="text-term-fg hover:text-term-fg text-sm transition-colors">
-              VIEW_ALL &rarr;
-            </Link>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {pools.slice(0, 8).map((pool, i) => (
-              <motion.div key={pool.slug} initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}>
-                <Link to={`/pool/${pool.slug}`}
-                  className="terminal-window p-4 flex flex-col items-center gap-2 text-center min-w-[110px] group">
-                  <div className="w-11 h-11 bg-term-dim border border-term-muted p-1.5 flex items-center justify-center group-hover:bg-term-dim transition-colors">
-                    <img src={pool.logo} alt={pool.name} className="w-full h-full object-contain"
-                      onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
-                    <div style={{ display: 'none' }}
-                      className="w-full h-full items-center justify-center text-lg font-bold text-term-fg">
-                      {pool.name.charAt(0)}
+      {/* Pool Cards + Hashrate Distribution */}
+      <motion.div {...fadeUp}>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-3">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold term-glow">MINING POOLS</h3>
+              <Link to="/pools" className="text-term-fg hover:text-term-fg text-sm transition-colors">
+                VIEW_ALL &rarr;
+              </Link>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {pools.slice(0, 8).map((pool, i) => (
+                <motion.div key={pool.slug} initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}>
+                  <Link to={`/pool/${pool.slug}`}
+                    className="terminal-window p-4 flex flex-col items-center gap-2 text-center min-w-[110px] group">
+                    <div className="w-11 h-11 bg-term-dim border border-term-muted p-1.5 flex items-center justify-center group-hover:bg-term-dim transition-colors">
+                      <img src={pool.logo} alt={pool.name} className="w-full h-full object-contain"
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                      <div style={{ display: 'none' }}
+                        className="w-full h-full items-center justify-center text-lg font-bold text-term-fg">
+                        {pool.name.charAt(0)}
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-xs font-semibold group-hover:text-term-fg transition-colors leading-tight">{pool.name}</p>
-                  <p className="text-term-gray text-[10px] font-mono">
-                    {pool.avg_hashrate ? fmtHashrate(pool.avg_hashrate) : '-'}
-                  </p>
-                </Link>
-              </motion.div>
-            ))}
+                    <p className="text-xs font-semibold group-hover:text-term-fg transition-colors leading-tight">{pool.name}</p>
+                    <p className="text-term-gray text-[10px] font-mono">
+                      {pool.avg_hashrate ? fmtHashrate(pool.avg_hashrate) : '-'}
+                    </p>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </motion.div>
-      )}
+          <div className="lg:col-span-2">
+            <div className="terminal-window p-4 sm:p-6">
+              <h3 className="text-sm sm:text-lg font-semibold mb-4 term-glow">HASHRATE DISTRIBUTION</h3>
+              <Pie3D
+                data={pieData}
+                colors={TERMINAL_COLORS}
+                onClickSlice={(i) => {
+                  const slug = pieData[i].slug;
+                  if (slug !== 'others') navigate(`/pool/${slug}`);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Coin Cards */}
       {coins.length > 0 && (
@@ -289,40 +298,6 @@ export default function Dashboard() {
           </div>
         </motion.div>
       )}
-
-      {/* Pie + Bar */}
-      <motion.div {...fadeUp} className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div className="terminal-window p-4 sm:p-6">
-          <h3 className="text-sm sm:text-lg font-semibold mb-4 term-glow">HASHRATE DISTRIBUTION</h3>
-          <Pie3D
-            data={pieData}
-            colors={TERMINAL_COLORS}
-            onClickSlice={(i) => {
-              const slug = pieData[i].slug;
-              if (slug !== 'others') navigate(`/pool/${slug}`);
-            }}
-          />
-        </div>
-
-        <div className="terminal-window p-4 sm:p-6">
-          <h3 className="text-sm sm:text-lg font-semibold mb-4 term-glow">AVG CORRELATION BY CRYPTO</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={barData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-              <defs>
-                <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#33ff00" stopOpacity={0.9} />
-                  <stop offset="100%" stopColor="#33ff00" stopOpacity={0.2} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f521f" />
-              <XAxis dataKey="coin" stroke="#1f521f" tick={{ fontSize: 10, fontFamily: '"JetBrains Mono", monospace' }} />
-              <YAxis stroke="#1f521f" tick={{ fontSize: 10, fontFamily: '"JetBrains Mono", monospace' }} domain={[-1, 1]} />
-              <Tooltip cursor={false} contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #1f521f', borderRadius: 0, color: '#e5e7eb' }} />
-              <Bar dataKey="avg" fill="url(#barGrad)" radius={[0, 0, 0, 0]} animationDuration={1200} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </motion.div>
 
       {/* Correlation Heatmap */}
       {correlations.length > 0 && (

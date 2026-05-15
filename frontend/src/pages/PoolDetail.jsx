@@ -42,6 +42,17 @@ function corrColor(r) {
   return 'text-term-red';
 }
 
+function normalizePoints(pts) {
+  if (!pts.length) return [];
+  const firstH = pts[0].hashrate;
+  const firstP = pts[0].price;
+  return pts.map((p) => ({
+    timestamp: p.timestamp,
+    hashrate: firstH ? ((p.hashrate - firstH) / firstH) * 100 : 0,
+    price: firstP ? ((p.price - firstP) / firstP) * 100 : 0,
+  }));
+}
+
 function alignHashratePrice(hashrates, prices) {
   if (!hashrates.length || !prices.length) return [];
   const priceMap = new Map();
@@ -79,6 +90,7 @@ export default function PoolDetail() {
   const [hashrates, setHashrates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sharedRange, setSharedRange] = useState(null);
+  const [normalized, setNormalized] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -201,12 +213,24 @@ export default function PoolDetail() {
       {/* Intelligence Panel: Correlation Profile + Hashrate vs Avg Price */}
       {(correlations.length > 0 || vsAvg.length > 0) && (
         <motion.div {...fadeUp} transition={{ delay: 0.05 }} className="terminal-window p-4 sm:p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="w-2 h-2 rounded-full bg-term-fg" />
-            <h3 className="text-lg font-semibold tracking-wide uppercase text-term-muted">
-              Intelligence Briefing
-            </h3>
-            <span className="text-term-muted text-xs font-mono ml-2">{pool.name}</span>
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-term-fg" />
+              <h3 className="text-sm sm:text-lg font-semibold tracking-wide uppercase text-term-muted">
+                Intelligence Briefing
+              </h3>
+              <span className="text-term-muted text-xs font-mono ml-2">{pool.name}</span>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setNormalized(false)}
+                className={`btn-bracket px-3 py-1.5 text-xs font-medium ${!normalized ? 'active' : ''}`}>
+                Levels
+              </button>
+              <button onClick={() => setNormalized(true)}
+                className={`btn-bracket px-3 py-1.5 text-xs font-medium ${normalized ? 'active' : ''}`}>
+                % Change
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             {/* Left: Radar correlation profile */}
@@ -276,10 +300,10 @@ export default function PoolDetail() {
                   </p>
                 </div>
                 <ZoomableAreaChart
-                  data={vsAvg}
+                  data={normalized ? normalizePoints(vsAvg) : vsAvg}
                   height={300}
-                  leftAxis={{ color: '#ffffff', formatter: fmtHashrate }}
-                  rightAxis={{ color: '#ffb000', formatter: (v) => `$${v.toLocaleString()}` }}
+                  leftAxis={{ color: '#ffffff', formatter: normalized ? (v) => `${v.toFixed(0)}%` : fmtHashrate }}
+                  rightAxis={{ color: '#ffb000', formatter: normalized ? (v) => `${v.toFixed(0)}%` : (v) => `$${v.toLocaleString()}` }}
                   series={[
                     { dataKey: 'hashrate', color: '#ffffff', name: `${pool.name} Hashrate`, yAxisId: 'left' },
                     { dataKey: 'price', color: '#ffb000', name: 'Avg Crypto Price', yAxisId: 'right' },
@@ -329,10 +353,10 @@ export default function PoolDetail() {
                         </div>
                       </div>
                       <ZoomableAreaChart
-                        data={points}
+                        data={normalized ? normalizePoints(points) : points}
                         height={140}
-                        leftAxis={{ color: '#ffffff', formatter: (v) => v >= 1e15 ? `${(v/1e15).toFixed(0)}P` : `${(v/1e12).toFixed(0)}T` }}
-                        rightAxis={{ color, formatter: (v) => v >= 1000 ? `$${(v/1000).toFixed(0)}k` : `$${v.toFixed(0)}` }}
+                        leftAxis={{ color: '#ffffff', formatter: normalized ? (v) => `${v.toFixed(0)}%` : (v) => v >= 1e15 ? `${(v/1e15).toFixed(0)}P` : `${(v/1e12).toFixed(0)}T` }}
+                        rightAxis={{ color, formatter: normalized ? (v) => `${v.toFixed(0)}%` : (v) => v >= 1000 ? `$${(v/1000).toFixed(0)}k` : `$${v.toFixed(0)}` }}
                         series={[
                           { dataKey: 'hashrate', color: '#ffffff', name: 'Hashrate', yAxisId: 'left' },
                           { dataKey: 'price', color, name: `${coinNames[coinId]} Price`, yAxisId: 'right' },

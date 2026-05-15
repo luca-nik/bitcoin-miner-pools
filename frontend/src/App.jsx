@@ -14,7 +14,6 @@ const links = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/pools', label: 'Pools' },
   { to: '/coins', label: 'Coins' },
-  { to: '/analysis', label: 'Analysis' },
 ]
 
 const linkClass = ({ isActive }) =>
