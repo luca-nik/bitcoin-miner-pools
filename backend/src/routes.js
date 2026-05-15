@@ -418,6 +418,52 @@ export function registerRoutes(app) {
     return { poolName: poolInfo?.name ?? slug, points };
   });
 
+  app.get('/api/coin-vs-avg/:coinId', async (req) => {
+    const { coinId } = req.params;
+
+    const coinPrices = db.prepare(`
+      SELECT
+        (timestamp / 86400) * 86400 as timestamp,
+        price_usd as price
+      FROM crypto_prices
+      WHERE coin_id = ?
+      GROUP BY (timestamp / 86400)
+      ORDER BY timestamp
+    `).all(coinId);
+
+    const avgHashrate = db.prepare(`
+      SELECT
+        (timestamp / 86400) * 86400 as timestamp,
+        AVG(hashrate) as hashrate
+      FROM pool_hashrates
+      GROUP BY (timestamp / 86400)
+      ORDER BY timestamp
+    `).all();
+
+    const priceMap = new Map();
+    for (const p of coinPrices) priceMap.set(p.timestamp, p.price);
+
+    const points = [];
+    for (const h of avgHashrate) {
+      let bestTs = null, bestDist = Infinity;
+      for (let offset = -7; offset <= 7; offset++) {
+        const candidate = h.timestamp + offset * 86400;
+        if (priceMap.has(candidate) && Math.abs(offset) < bestDist) {
+          bestDist = Math.abs(offset);
+          bestTs = candidate;
+        }
+      }
+      if (bestTs !== null) {
+        points.push({
+          timestamp: h.timestamp,
+          hashrate: h.hashrate,
+          price: priceMap.get(bestTs),
+        });
+      }
+    }
+    return { coinId, points };
+  });
+
   app.get('/api/coin-detail/:coinId', async (req) => {
     const { coinId } = req.params;
 

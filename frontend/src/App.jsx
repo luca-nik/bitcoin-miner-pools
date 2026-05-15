@@ -37,7 +37,7 @@ export default function App() {
           animate={{ opacity: 1 }}
           className="text-sm font-bold tracking-widest term-glow"
         >
-          {'>'} BTC_POOL_CORR
+          {'>'} MINE//SCOPE
         </motion.h1>
 
         {/* Desktop nav */}
